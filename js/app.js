@@ -171,7 +171,7 @@ function makeCtx(mod) {
     $: s => panel.querySelector(s), $$: s => [...panel.querySelectorAll(s)],
     changed() {
       if (ctx.d.is_valid) { ctx.d._edited = true; setStatus(ctx); }
-      saveState(); scheduleLive(ctx);
+      saveState(); scheduleLive(ctx); updateReqPill(ctx);
     },
     rerender() { renderBody(ctx, true); }
   };
@@ -206,16 +206,18 @@ function renderModule(id) {
       <div id="statusSlot">${statusHTML(ctx)}</div>
       <h2>Módulo ${mod.num}: ${esc(mod.title)}</h2>
       <p class="purpose"><b>Propósito:</b> ${esc(mod.purpose)}</p>
+      ${phaseStepsHTML(mod)}
       ${mod.quote ? `<div class="quote">${ICON.quote}<div>“${esc(mod.quote)}”${mod.ux ? `<div style="margin-top:6px;font-style:normal;font-weight:600;font-size:13.5px">${esc(mod.ux)}</div>` : ''}</div></div>` : ''}
     </div>
     <div class="panel-body" id="panelBody"></div>
     <div class="alerts-zone" id="alerts" style="padding:0 32px"></div>
     <div class="panel-foot">
-      <div class="left">${prev ? `<a class="btn btn-ghost" href="#modulo/${prev}">${ICON.back} Anterior</a>` : ''}<span class="autosave" id="autosave"><i></i> Guardado automáticamente</span></div>
+      <div class="left">${prev ? `<a class="btn btn-ghost" href="#modulo/${prev}">${ICON.back} Anterior</a>` : ''}<span class="autosave" id="autosave"><i></i> Guardado automáticamente</span><span id="reqSlot"></span></div>
       <div class="right" id="footRight"></div>
     </div>`;
   renderBody(ctx, false);
   renderFoot(ctx, next);
+  updateReqPill(ctx);
   document.getElementById('mobileMod').textContent = `Módulo ${mod.num} · ${mod.title}`;
 }
 function renderFoot(ctx, next) {
@@ -288,7 +290,8 @@ const BUILTIN = {
   repDel(ctx, b) { removeAnim(b.closest('.rep-item'), () => { const k = b.dataset.k; getPath(ctx.d, k).splice(+b.dataset.i, 1); refreshField(ctx, flatFields(ctx.fields).find(x => x.k === k)); ctx.changed(); }); },
   pathAdd(ctx, b) { const p = b.dataset.path; const a = getPath(ctx.d, p) || []; a.push(JSON.parse(b.dataset.tpl || '{}')); setPath(ctx.d, p, a); ctx.rerender(); const n = document.querySelector(`[data-node="${p}.${a.length - 1}"]`); if (n) { n.classList.add('fresh'); n.querySelector('input')?.focus(); } ctx.changed(); },
   pathDel(ctx, b) { const p = b.dataset.path; removeAnim(b.closest('.rep-item, .list-row'), () => { getPath(ctx.d, p).splice(+b.dataset.i, 1); ctx.rerender(); ctx.changed(); }); },
-  validate(ctx, b) { runValidation(ctx, b); }
+  validate(ctx, b) { runValidation(ctx, b); },
+  showReqs(ctx, b) { runValidation(ctx, b, true); }
 };
 function removeAnim(el, done) { if (!el) return done(); el.classList.add('removing'); setTimeout(done, 280); }
 function onPanelClick(e) {
@@ -298,17 +301,37 @@ function onPanelClick(e) {
   else if (ctx.mod.actions && ctx.mod.actions[a]) { if (b.tagName !== 'INPUT') e.preventDefault(); ctx.mod.actions[a].call(ctx.mod, ctx, b); }
 }
 
+/* ---------- Orientación dentro del módulo ---------- */
+function phaseStepsHTML(mod) {
+  const mods = MODULES.filter(m => m.phase === mod.phase);
+  const ap = mods.filter(m => applies(m.id)); const pos = ap.findIndex(m => m.id === mod.id) + 1;
+  const nx = nextAfter(mod.id);
+  return `<div class="phase-steps">${mods.map(m => `<a href="#modulo/${m.id}" title="Módulo ${m.num}: ${esc(m.title)}" class="${m.id === mod.id ? 'cur' : !applies(m.id) ? 'na' : isValid(STATE, m.id) ? 'done' : ''}"></a>`).join('')}<span>${pos ? `Paso ${pos} de ${ap.length} en esta fase` : 'Fuera de tu ruta'}${nx && mod.id !== '29' ? ` · Después: ${esc(MOD[nx].title)}` : ''}</span></div>`;
+}
+function collectChecks(ctx) {
+  const mod = ctx.mod; const gated = mod.gate && mod.gate(ctx);
+  let res = gated ? (mod.validate ? mod.validate(ctx.d, ctx) : []) : genericValidate(ctx);
+  if (!gated && !res.some(x => x.t === 'e') && mod.validate) res = res.concat(mod.validate(ctx.d, ctx));
+  return res;
+}
+let reqTimer = null;
+function updateReqPill(ctx) {
+  clearTimeout(reqTimer);
+  reqTimer = setTimeout(() => {
+    const slot = document.getElementById('reqSlot'); if (!slot || CURRENT !== ctx || !applies(ctx.mod.id)) { if (slot) slot.innerHTML = ''; return; }
+    let n = 0; try { n = collectChecks(ctx).filter(x => x.t === 'e').length; } catch (e) { return; }
+    slot.innerHTML = `<button class="req-pill ${n ? '' : 'ok'}" data-act="showReqs" title="Ver qué falta"><i></i>${n ? `Faltan ${n} requisito${n > 1 ? 's' : ''}` : 'Listo para validar'}</button>`;
+  }, 350);
+}
+
 /* ---------- Validar y guardar ---------- */
-function runValidation(ctx, btn) {
+function runValidation(ctx, btn, previewOnly) {
   const mod = ctx.mod; const zone = document.getElementById('alerts');
   document.querySelectorAll('#panel .field.err').forEach(x => x.classList.remove('err'));
-  let res = mod.gate && mod.gate(ctx) ? (mod.validate ? mod.validate(ctx.d, ctx) : []) : genericValidate(ctx);
-  if (!(mod.gate && mod.gate(ctx))) {
-    const errsGen = res.filter(x => x.t === 'e');
-    if (!errsGen.length && mod.validate) res = res.concat(mod.validate(ctx.d, ctx));
-  }
+  const res = collectChecks(ctx);
   const errs = res.filter(x => x.t === 'e'), warns = res.filter(x => x.t === 'w');
   const list = a => a.length === 1 ? a[0].m : `<ul>${a.map(x => `<li>${x.m}</li>`).join('')}</ul>`;
+  if (previewOnly && !errs.length) { zone.innerHTML = alertBox('success', 'Todo listo: presiona <b>Validar y guardar</b> para avanzar.') + (warns.length ? alertBox('warning', list(warns)) : ''); zone.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
   if (errs.length) {
     zone.innerHTML = alertBox('error', `<b>Revisa ${errs.length === 1 ? 'lo siguiente' : `estos ${errs.length} puntos`} antes de avanzar:</b>${errs.length === 1 ? '<br>' : ''}${list(errs)}`) + (warns.length ? alertBox('warning', list(warns)) : '');
     errs.forEach(x => { if (x.k) { const el = document.getElementById(fid(x.k)); if (el) el.classList.add('err'); } });
@@ -323,7 +346,7 @@ function runValidation(ctx, btn) {
   saveState(true);
   const next = nextAfter(mod.id);
   zone.innerHTML = alertBox('success', `✓ Módulo ${mod.num} guardado correctamente.${next && mod.id !== '29' ? ` Avanzando al Módulo ${MOD[next].num}…` : ''}`) + (warns.length ? alertBox('warning', list(warns)) : '');
-  setStatus(ctx); renderSidebar(); updateProgress(); renderFoot(ctx, next);
+  setStatus(ctx); renderSidebar(); updateProgress(); renderFoot(ctx, next); updateReqPill(ctx);
   burst(btn); toast(mod.id === '29' ? '¡Protocolo completo! Mucho éxito en tu defensa.' : `Módulo ${mod.num} validado`);
   zone.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   if (next && mod.id !== '29') setTimeout(() => { if (CURRENT === ctx) location.hash = '#modulo/' + next; }, 1400);
@@ -377,32 +400,140 @@ function updateProgress() {
   const ring = document.querySelector('#progressRing .fg'); ring.style.strokeDashoffset = 119.38 * (1 - p.pct / 100);
   document.getElementById('progressText').textContent = p.pct + '%';
   document.getElementById('progressLabel').textContent = `${p.done} de ${p.total} módulos`;
-  const hs = document.getElementById('heroStart');
-  if (hs) { if (p.done) { hs.href = '#modulo/' + firstPending(); hs.firstChild.textContent = 'Continuar donde me quedé '; } else { hs.href = '#modulo/1'; hs.firstChild.textContent = 'Comenzar ahora '; } }
 }
 
-/* ---------- Landing ---------- */
+/* ---------- Inicio ---------- */
+function phaseState(n) {
+  const ap = MODULES.filter(m => m.phase === n && applies(m.id));
+  const dn = ap.filter(m => isValid(STATE, m.id)).length;
+  const p = progress();
+  const curPhase = p.pct < 100 ? MOD[firstPending()].phase : 0;
+  return { total: ap.length, done: dn, st: dn === ap.length ? 'done' : (n === curPhase && p.done ? 'current' : (n === curPhase ? 'next' : 'pending')) };
+}
+function crPath(P) { // Catmull-Rom → Bézier
+  let d = `M${P[0].x},${P[0].y}`;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+    d += ` C${p1.x + (p2.x - p0.x) / 6},${p1.y + (p2.y - p0.y) / 6} ${p2.x - (p3.x - p1.x) / 6},${p2.y - (p3.y - p1.y) / 6} ${p2.x},${p2.y}`;
+  }
+  return d;
+}
+function renderHeroPath() {
+  const S = [{ x: 92, y: 408, rx: 64, ry: 30 }, { x: 214, y: 340, rx: 55, ry: 26 }, { x: 300, y: 270, rx: 47, ry: 23 }, { x: 362, y: 202, rx: 40, ry: 20 }, { x: 408, y: 142, rx: 33, ry: 17 }, { x: 444, y: 90, rx: 27, ry: 14 }];
+  const bulb = { x: 482, y: 34 };
+  const d = crPath([...S, { x: bulb.x - 4, y: bulb.y + 30 }]);
+  const p = progress();
+  const glow = 0.35 + 0.65 * p.pct / 100;
+  let s = `<svg viewBox="0 0 560 470" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Camino de 6 fases hacia la defensa de tesis">
+    <defs>
+      <radialGradient id="bg-glow"><stop offset="0" stop-color="#FFC27A" stop-opacity=".95"/><stop offset=".45" stop-color="#F39A3D" stop-opacity=".35"/><stop offset="1" stop-color="#F39A3D" stop-opacity="0"/></radialGradient>
+      <linearGradient id="hl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    </defs>
+    <path class="path-line" d="${d}"/>
+    <path class="path-done" id="pathDone" d="${d}"/>`;
+  S.forEach((o, i) => {
+    const ph = PHASES[i]; const st = phaseState(ph.n);
+    const fill = st.st === 'done' ? ph.color : (st.st === 'current' || st.st === 'next') ? '#F39A3D' : '#DCE1E8';
+    const numFill = st.st === 'pending' ? '#8790A5' : '#fff';
+    const left = i >= 3; const lx = left ? o.x - o.rx - 14 : o.x + o.rx + 14; const anchor = left ? 'end' : 'start';
+    const status = st.st === 'done' ? '✓ Completada' : `${st.done}/${st.total} módulos`;
+    s += `<g class="stone ${st.st === 'current' || st.st === 'next' ? 'current' : ''}" data-goto-phase="${ph.n}" tabindex="0" role="button" aria-label="Fase ${ph.n}: ${esc(ph.name)}, ${status}" style="animation-delay:${200 + i * 140}ms">
+      <ellipse cx="${o.x}" cy="${o.y + o.ry * .55}" rx="${o.rx * .92}" ry="${o.ry * .5}" fill="rgba(26,38,64,.12)"/>
+      ${st.st === 'current' || st.st === 'next' ? `<ellipse class="ring" cx="${o.x}" cy="${o.y}" rx="${o.rx}" ry="${o.ry}" fill="none" stroke="#F39A3D" stroke-width="3"/>` : ''}
+      <ellipse class="body" cx="${o.x}" cy="${o.y}" rx="${o.rx}" ry="${o.ry}" fill="${fill}" ${st.st === 'pending' ? 'stroke="#C5CDD8" stroke-width="1.5"' : ''}/>
+      <ellipse cx="${o.x - o.rx * .15}" cy="${o.y - o.ry * .35}" rx="${o.rx * .6}" ry="${o.ry * .38}" fill="url(#hl)" pointer-events="none"/>
+      <text class="num" x="${o.x}" y="${o.y + 5}" text-anchor="middle" fill="${numFill}" style="fill:${numFill}">${st.st === 'done' ? '✓' : ph.n}</text>
+      <text x="${lx}" y="${o.y - 8}" text-anchor="${anchor}"><tspan class="lbl-k" fill="${ph.color}" style="fill:${ph.color}">FASE ${ph.n}</tspan></text>
+      <text class="lbl-t" x="${lx}" y="${o.y + 9}" text-anchor="${anchor}">${esc(ph.name)}</text>
+      <text class="lbl-s" x="${lx}" y="${o.y + 24}" text-anchor="${anchor}">${status}</text>
+    </g>`;
+  });
+  s += `<g class="stone" data-goto-phase="6" style="animation-delay:1100ms" aria-hidden="true">
+      <circle class="bulb-glow" cx="${bulb.x}" cy="${bulb.y}" r="58" fill="url(#bg-glow)" style="opacity:${glow}"/>
+      <path d="M${bulb.x} ${bulb.y - 24} a22 22 0 0 1 13 39.8 v6.2 h-26 v-6.2 A22 22 0 0 1 ${bulb.x} ${bulb.y - 24}z" fill="#1A2640"/>
+      <path d="M${bulb.x - 6} ${bulb.y + 12} v-10 q6 -8 12 0 v10" fill="none" stroke="#FFC27A" stroke-width="2.4" stroke-linecap="round"/>
+      <rect x="${bulb.x - 11}" y="${bulb.y + 25}" width="22" height="4" rx="2" fill="#1A2640"/><rect x="${bulb.x - 8}" y="${bulb.y + 31}" width="16" height="4" rx="2" fill="#1A2640"/>
+      <text class="lbl-s" x="${bulb.x - 34}" y="${bulb.y - 6}" text-anchor="end">Tu defensa</text>
+    </g></svg>`;
+  const host = document.getElementById('heroPath'); host.innerHTML = s;
+  const pd = host.querySelector('#pathDone'); const L = pd.getTotalLength();
+  pd.style.transition = 'none'; pd.style.strokeDasharray = L; pd.style.strokeDashoffset = L; void pd.getBoundingClientRect(); pd.style.transition = '';
+  requestAnimationFrame(() => requestAnimationFrame(() => { pd.style.strokeDashoffset = L * (1 - p.pct / 100); }));
+}
+function renderResume() {
+  const p = progress(); const card = document.getElementById('resumeCard'); const hs = document.getElementById('heroStart');
+  if (!p.done) { card.classList.add('hidden'); hs.href = '#modulo/1'; hs.firstChild.textContent = 'Comenzar mi protocolo '; return; }
+  const fp = MOD[firstPending()];
+  card.classList.remove('hidden');
+  document.getElementById('rcPct').textContent = p.pct + '%';
+  requestAnimationFrame(() => requestAnimationFrame(() => { document.getElementById('rcBar').style.width = p.pct + '%'; }));
+  document.getElementById('rcText').innerHTML = p.pct === 100 ? '¡Completaste todos los módulos! Repasa tu simulacro de defensa.' : `${p.done} de ${p.total} módulos validados · Sigue en el <b>Módulo ${fp.num}: ${esc(fp.title)}</b>`;
+  hs.href = '#modulo/' + fp.id; hs.firstChild.textContent = 'Continuar mi protocolo ';
+}
+
+/* demo de validación */
+let demoTyped = false, demoTimer = null;
+function demoUpdate() {
+  const v = document.getElementById('demoInput').value; const w = firstWord(v); const b = bloomOf(w);
+  const dv = document.getElementById('dcVerb'), db = document.getElementById('dcBloom');
+  dv.className = 'dc' + (!w ? '' : isInf(w) ? ' ok' : ' bad'); dv.querySelector('b').textContent = w ? (isInf(w) ? w : 'no es infinitivo') : '';
+  db.className = 'dc' + (!w || !isInf(w) ? '' : b >= 0 ? ' ok' : ' bad'); db.querySelector('b').textContent = b >= 0 ? `${BLOOM[b].n} (${b + 1}/6)` : (w && isInf(w) ? 'no catalogado' : '');
+  document.querySelectorAll('#demoBloom [data-b]').forEach(el => el.classList.toggle('on', +el.dataset.b === b));
+}
+function demoAutoType() {
+  if (demoTyped) return; demoTyped = true;
+  const inp = document.getElementById('demoInput'); const txt = 'Analizar la relación entre los hábitos de estudio y el rendimiento académico'; let i = 0;
+  inp.value = '';
+  clearInterval(demoTimer);
+  demoTimer = setInterval(() => { if (document.activeElement === inp) return clearInterval(demoTimer); inp.value = txt.slice(0, ++i); demoUpdate(); if (i >= txt.length) clearInterval(demoTimer); }, 45);
+}
+
+/* ruta adaptable */
+let routeSel = null;
+const routeOff = (r, id) => (r === 'cualitativo' && ['9', '18', '18_5'].includes(id)) || (r === 'cuantitativo' && id === '19');
+function renderRoute(r, animate) {
+  const prev = routeSel; routeSel = r;
+  const here = progress().pct < 100 ? firstPending() : null;
+  const n = MODULES.filter(m => !routeOff(r, m.id)).length;
+  const omit = MODULES.filter(m => routeOff(r, m.id)).map(m => `${m.title} (${m.num})`);
+  document.getElementById('routeNote').innerHTML = `Ruta <b>${r}</b>: <b>${n} módulos</b>${omit.length ? ` · se omite${omit.length > 1 ? 'n' : ''} ${esc(omit.join(', '))}` : ' · incluye hipótesis, variables y categorías'}.`;
+  const grid = document.getElementById('routeGrid');
+  if (!grid.children.length || !animate) {
+    grid.innerHTML = PHASES.map((ph, i) => `<div class="rcard reveal" style="--pc:${ph.color};--d:${i}"><header><span class="pdot">${ph.n}</span><b>${esc(ph.name)}</b></header><ul>${MODULES.filter(m => m.phase === ph.n).map(m => `<li data-rid="${m.id}" class="${routeOff(r, m.id) ? 'off' : ''} ${m.id === here ? 'here' : ''}"><a href="#modulo/${m.id}"><span class="n">${m.num}</span><span class="t">${esc(m.title)}</span><span class="st">${isValid(STATE, m.id) ? ICON.check : ''}</span></a></li>`).join('')}</ul></div>`).join('');
+    observeReveal();
+  } else {
+    grid.querySelectorAll('[data-rid]').forEach(li => { const off = routeOff(r, li.dataset.rid); if (li.classList.contains('off') !== off) { li.classList.toggle('off', off); li.classList.remove('flip'); void li.offsetWidth; li.classList.add('flip'); } });
+  }
+  const tg = document.getElementById('routeToggle'); const btn = tg.querySelector(`[data-route="${r}"]`);
+  tg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b === btn); b.setAttribute('aria-selected', b === btn); });
+  const pill = tg.querySelector('.rt-pill'); pill.style.width = btn.offsetWidth + 'px'; pill.style.transform = `translateX(${btn.offsetLeft - 5}px)`;
+  return prev;
+}
+
+let homeObs;
 function renderLanding() {
-  const chips = MODULES.map(m => `<span class="chip"><i>${m.num}</i> ${esc(m.title)}</span>`).join('');
-  document.getElementById('marquee').innerHTML = chips + chips;
-  document.getElementById('phaseGrid').innerHTML = PHASES.map((ph, i) => {
-    const mods = MODULES.filter(m => m.phase === ph.n); const ap = mods.filter(m => applies(m.id));
-    const dn = ap.filter(m => isValid(STATE, m.id)).length; const pct = ap.length ? dn / ap.length * 100 : 0;
-    return `<button class="phase-card reveal" style="--pc:${ph.color};--d:${i}" data-goto-phase="${ph.n}"><span class="num">FASE ${ph.n}</span><h3>${esc(ph.name)}</h3><p>${esc(ph.desc)}</p>
-      <div class="range"><span>Módulos ${mods[0].num}–${mods[mods.length - 1].num}</span><span class="mini-bar"><i data-w="${pct}"></i></span></div></button>`;
-  }).join('');
+  renderHeroPath(); renderResume();
+  if (!document.querySelector('#demoBloom [data-b]')) document.getElementById('demoBloom').innerHTML = BLOOM.map((b, i) => `<div data-b="${i}" style="--bc:${b.c}">${b.n}<small>Nivel ${i + 1}</small></div>`).join('');
+  renderRoute(enfoqueOf(STATE) || 'mixto', false);
   observeReveal();
+  if (!homeObs) homeObs = new IntersectionObserver(es => es.forEach(x => {
+    if (!x.isIntersecting) return;
+    if (x.target.id === 'demoInput') demoAutoType();
+    if (x.target.id === 'obNum') { document.getElementById('obArc').style.strokeDashoffset = 314.16 * (1 - 0.874); countUp(x.target, 0.874, 1600, 3); }
+    homeObs.unobserve(x.target);
+  }), { threshold: 0.6 });
+  ['demoInput', 'obNum'].forEach(id => homeObs.observe(document.getElementById(id)));
 }
-function animateLanding() {
-  document.querySelectorAll('[data-count]').forEach(el => countUp(el, +el.dataset.count, 1200, 0));
-  setTimeout(() => document.querySelectorAll('.mini-bar i').forEach(b => b.style.width = b.dataset.w + '%'), 300);
-}
-function onPhaseCard(e) {
-  const c = e.target.closest('[data-goto-phase]'); if (!c) return;
-  const n = +c.dataset.gotoPhase;
+function animateLanding() { /* las animaciones del inicio se disparan al renderizar y al hacer scroll */ }
+function goPhase(n) {
   const target = MODULES.filter(m => m.phase === n && applies(m.id)).find(m => isUnlocked(m.id) && !isValid(STATE, m.id)) || MODULES.find(m => m.phase === n && applies(m.id) && isUnlocked(m.id));
   if (!target) { toast(`Completa las fases anteriores para desbloquear la Fase ${n}`, 'warn'); location.hash = '#modulo/' + firstPending(); return; }
   location.hash = '#modulo/' + target.id;
+}
+function onHomeClick(e) {
+  const st = e.target.closest('[data-goto-phase]'); if (st) return goPhase(+st.dataset.gotoPhase);
+  const rb = e.target.closest('[data-route]'); if (rb) return renderRoute(rb.dataset.route, true);
+  const sc = e.target.closest('[data-scroll]'); if (sc) { e.preventDefault(); document.getElementById(sc.dataset.scroll).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 }
 let revealObs;
 function observeReveal() {
@@ -624,7 +755,11 @@ function route() {
   panel.addEventListener('change', onFieldEvent);
   panel.addEventListener('click', onPanelClick);
   document.getElementById('sidebar').addEventListener('click', onSidebarClick);
-  document.getElementById('phaseGrid').addEventListener('click', onPhaseCard);
+  document.getElementById('view-inicio').addEventListener('click', onHomeClick);
+  document.getElementById('view-inicio').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-goto-phase]')) { e.preventDefault(); goPhase(+e.target.closest('[data-goto-phase]').dataset.gotoPhase); } });
+  document.getElementById('demoInput').addEventListener('input', () => { clearInterval(demoTimer); demoUpdate(); });
+  document.getElementById('demoInput').addEventListener('focus', () => clearInterval(demoTimer));
+  addEventListener('resize', () => { if (routeSel && document.getElementById('view-inicio').classList.contains('active')) renderRoute(routeSel, true); });
   document.getElementById('openSidebar').addEventListener('click', openSidebar);
   document.getElementById('scrim').addEventListener('click', closeSidebar);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });

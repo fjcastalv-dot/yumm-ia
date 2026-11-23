@@ -33,7 +33,7 @@
   <nav class="main-nav" aria-label="Principal">
     <ul>
       <li><a href="#inicio" data-nav="inicio">Inicio</a></li>
-      <li><a href="#modulo/1" data-nav="modulo">Módulos</a></li>
+      <li><a href="#modulo/1" data-nav="modulo">Mi protocolo</a></li>
       <li><a href="#coherencia" data-nav="coherencia">Validaciones cruzadas</a></li>
       <li><a href="#acerca" data-nav="acerca">Acerca de</a></li>
     </ul>
@@ -43,56 +43,91 @@
 <main>
   <!-- ================= INICIO ================= -->
   <section class="view" id="view-inicio">
-    <div class="wrap">
-      <div class="hero">
-        <div class="hero-left">
-          <span class="eyebrow">Asistente de investigación metodológica · UT Cancún</span>
-          <h1>Construye tu protocolo de investigación, <span class="hl">un paso a la vez</span>.</h1>
-          <p class="lead">YUMM IA es un asistente digital que acompaña a estudiantes de universidades tecnológicas en la construcción de protocolos de investigación: desde la delimitación del tema hasta la simulación de la defensa de tesis.</p>
-          <div class="hero-cta">
-            <a class="btn btn-primary btn-lg" href="#modulo/1" id="heroStart">Comenzar ahora <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-            <a class="btn btn-ghost btn-lg" href="#acerca">¿Cómo funciona?</a>
+    <!-- HERO: el camino de piedras hacia la idea -->
+    <div class="home-hero">
+      <div class="wrap home-hero-grid">
+        <div class="hh-text">
+          <span class="eyebrow"><span class="dot-live"></span> Student Research · UT Cancún</span>
+          <h1>De una idea a tu <span class="hl">defensa de tesis</span>, piedra por piedra.</h1>
+          <p class="lead">YUMM IA te guía en la construcción de tu protocolo de investigación con 29 módulos que validan cada decisión antes de dar el siguiente paso.</p>
+
+          <div class="resume-card hidden" id="resumeCard">
+            <div class="rc-top"><span class="eyebrow">Tu protocolo</span><b id="rcPct">0%</b></div>
+            <div class="meter"><i id="rcBar"></i></div>
+            <p id="rcText">Continúa en el Módulo 1</p>
           </div>
+
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="#modulo/1" id="heroStart">Comenzar mi protocolo <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn btn-ghost btn-lg" href="#como" data-scroll="como">Ver cómo funciona</a>
+          </div>
+          <ul class="trust">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5L20 7"/></svg> Sin registro</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5L20 7"/></svg> Se guarda en tu navegador</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5L20 7"/></svg> Exporta a Word y PDF</li>
+          </ul>
         </div>
-        <div class="hero-stats">
-          <div class="stat"><b data-count="29">0</b><span>módulos secuenciales</span></div>
-          <div class="stat"><b data-count="6">0</b><span>fases metodológicas</span></div>
-          <div class="stat"><b>ω</b><span>calculadora Omega de McDonald</span></div>
-        </div>
-        <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+        <div class="hh-path" id="heroPath" aria-label="Las 6 fases de tu protocolo"></div>
       </div>
     </div>
 
-    <div class="wrap section">
+    <!-- CÓMO FUNCIONA -->
+    <div class="wrap section" id="como">
       <div class="section-head reveal">
-        <div><span class="eyebrow">Ruta del protocolo</span><h2>Seis fases, de la idea a la defensa</h2></div>
-        <p>Cada módulo se habilita cuando el anterior pasa todas sus validaciones. Así ningún paso queda sin sustento.</p>
+        <div><span class="eyebrow">Cómo funciona</span><h2>Tres pasos que se repiten en cada módulo</h2></div>
+        <p>No necesitas saber metodología de antemano: el asistente te pregunta, revisa y te dice qué ajustar.</p>
       </div>
-      <div class="phase-grid" id="phaseGrid"></div>
+      <div class="steps3">
+        <div class="step3 reveal" style="--d:0"><span class="s3n">1</span><h3>Responde</h3><p>Cada módulo te hace preguntas concretas sobre tu investigación, con ejemplos y pistas.</p></div>
+        <div class="step3 reveal" style="--d:1"><span class="s3n">2</span><h3>Valida</h3><p>YUMM IA revisa en tiempo real verbos, coherencia, formatos y requisitos mínimos.</p></div>
+        <div class="step3 reveal" style="--d:2"><span class="s3n">3</span><h3>Avanza</h3><p>Al pasar la validación se desbloquea el siguiente módulo. Al final exportas tu protocolo.</p></div>
+      </div>
+
+      <div class="demo reveal">
+        <div class="demo-copy">
+          <span class="eyebrow">Pruébalo aquí</span>
+          <h3>Escribe un objetivo de investigación</h3>
+          <p>Así se ve una validación en tiempo real: el asistente detecta si inicias con un verbo en infinitivo y en qué nivel de la Taxonomía de Bloom se ubica.</p>
+        </div>
+        <div class="demo-box">
+          <label for="demoInput" class="sr-only">Objetivo de prueba</label>
+          <input id="demoInput" type="text" autocomplete="off" placeholder="Ej: Analizar la relación entre…">
+          <div class="demo-checks">
+            <div class="dc" id="dcVerb"><i></i><span>Verbo en infinitivo</span><b></b></div>
+            <div class="dc" id="dcBloom"><i></i><span>Nivel cognitivo (Bloom)</span><b></b></div>
+          </div>
+          <div class="bloom" id="demoBloom"></div>
+        </div>
+      </div>
     </div>
 
+    <!-- RUTA ADAPTABLE -->
     <div class="wrap section">
       <div class="section-head reveal">
-        <div><span class="eyebrow">Núcleo del software</span><h2>Tres capacidades que te acompañan</h2></div>
+        <div><span class="eyebrow">Tu ruta</span><h2>Una ruta que se adapta a tu enfoque</h2></div>
+        <p>En el Módulo 10 eliges tu enfoque y YUMM IA activa u omite módulos. Compara las rutas:</p>
       </div>
-      <div class="cap-grid">
-        <div class="cap reveal" style="--d:0">
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
-          <h3>Validaciones heurísticas en tiempo real</h3>
-          <p>Detecta verbos en infinitivo, coherencia entre objetivos y preguntas, y el formato de tus hipótesis mientras escribes.</p>
-          <span class="big">✓</span>
+      <div class="route-toggle reveal" role="tablist" id="routeToggle">
+        <button role="tab" data-route="cuantitativo">Cuantitativo</button>
+        <button role="tab" data-route="cualitativo">Cualitativo</button>
+        <button role="tab" data-route="mixto">Mixto</button>
+        <span class="rt-pill" aria-hidden="true"></span>
+      </div>
+      <p class="route-note" id="routeNote"></p>
+      <div class="route-grid" id="routeGrid"></div>
+    </div>
+
+    <!-- OMEGA -->
+    <div class="wrap section">
+      <div class="omega-band reveal">
+        <div>
+          <span class="eyebrow" style="color:var(--mint)">Módulo 21</span>
+          <h2>Confiabilidad con Omega de McDonald</h2>
+          <p>Más preciso que el Alfa de Cronbach cuando tus ítems tienen cargas distintas. Ingresa cargas factoriales, una matriz de correlaciones o tus datos brutos y obtén la interpretación al instante.</p>
         </div>
-        <div class="cap reveal" style="--d:1">
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9"/></svg></div>
-          <h3>Lógica condicional</h3>
-          <p>El flujo se bifurca según el enfoque elegido —cuantitativo, cualitativo o mixto— activando u omitiendo módulos.</p>
-          <span class="big">⑂</span>
-        </div>
-        <div class="cap reveal" style="--d:2">
-          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></div>
-          <h3>Omega de McDonald (ω)</h3>
-          <p>Evalúa la confiabilidad de tus instrumentos a partir de cargas factoriales, con interpretación automática y recomendaciones.</p>
-          <span class="big">ω</span>
+        <div class="ob-gauge" aria-hidden="true">
+          <svg viewBox="0 0 240 140"><path d="M20 120 A100 100 0 0 1 220 120" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="18" stroke-linecap="round"/><path id="obArc" d="M20 120 A100 100 0 0 1 220 120" fill="none" stroke="#39BEA3" stroke-width="18" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16"/></svg>
+          <div><b id="obNum">0.000</b><small>ω · buena confiabilidad</small></div>
         </div>
       </div>
     </div>
