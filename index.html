@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YUMM IA · Asistente de Investigación Metodológica | UT Cancún</title>
+<meta name="description" content="YUMM IA acompaña a estudiantes de la Universidad Tecnológica de Cancún en la construcción de protocolos de investigación a través de 29 módulos secuenciales.">
+<meta name="theme-color" content="#39BEA3">
+<link rel="icon" type="image/png" href="assets/yumm-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="site-header" id="siteHeader">
+  <div class="brand-bar">
+    <a href="#inicio" aria-label="Inicio"><img class="ut-logo" src="assets/logo-ut-cancun.png" alt="UT Cancún · BIS Universities"></a>
+    <span class="brand-sep" aria-hidden="true"></span>
+    <a href="#inicio" class="brand-title">
+      <img src="assets/yumm-mark.png" alt="" aria-hidden="true">
+      <span><strong>YUMM <em>IA</em></strong><small>Asistente de Investigación · UT Cancún</small></span>
+    </a>
+    <div class="header-progress" title="Progreso del protocolo">
+      <div class="meta"><b id="progressLabel">0 de 0 módulos</b>Progreso de tu protocolo</div>
+      <div class="ring" id="progressRing">
+        <svg width="46" height="46" viewBox="0 0 46 46"><circle class="bg" cx="23" cy="23" r="19"/><circle class="fg" cx="23" cy="23" r="19" stroke-dasharray="119.38" stroke-dashoffset="119.38"/></svg>
+        <span id="progressText">0%</span>
+      </div>
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Principal">
+    <ul>
+      <li><a href="#inicio" data-nav="inicio">Inicio</a></li>
+      <li><a href="#modulo/1" data-nav="modulo">Módulos</a></li>
+      <li><a href="#coherencia" data-nav="coherencia">Validaciones cruzadas</a></li>
+      <li><a href="#acerca" data-nav="acerca">Acerca de</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <!-- ================= INICIO ================= -->
+  <section class="view" id="view-inicio">
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-left">
+          <span class="eyebrow">Asistente de investigación metodológica · UT Cancún</span>
+          <h1>Construye tu protocolo de investigación, <span class="hl">un paso a la vez</span>.</h1>
+          <p class="lead">YUMM IA es un asistente digital que acompaña a estudiantes de universidades tecnológicas en la construcción de protocolos de investigación: desde la delimitación del tema hasta la simulación de la defensa de tesis.</p>
+          <div class="hero-cta">
+            <a class="btn btn-primary btn-lg" href="#modulo/1" id="heroStart">Comenzar ahora <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn btn-ghost btn-lg" href="#acerca">¿Cómo funciona?</a>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><b data-count="29">0</b><span>módulos secuenciales</span></div>
+          <div class="stat"><b data-count="6">0</b><span>fases metodológicas</span></div>
+          <div class="stat"><b>ω</b><span>calculadora Omega de McDonald</span></div>
+        </div>
+        <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+      </div>
+    </div>
+
+    <div class="wrap section">
+      <div class="section-head reveal">
+        <div><span class="eyebrow">Ruta del protocolo</span><h2>Seis fases, de la idea a la defensa</h2></div>
+        <p>Cada módulo se habilita cuando el anterior pasa todas sus validaciones. Así ningún paso queda sin sustento.</p>
+      </div>
+      <div class="phase-grid" id="phaseGrid"></div>
+    </div>
+
+    <div class="wrap section">
+      <div class="section-head reveal">
+        <div><span class="eyebrow">Núcleo del software</span><h2>Tres capacidades que te acompañan</h2></div>
+      </div>
+      <div class="cap-grid">
+        <div class="cap reveal" style="--d:0">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <h3>Validaciones heurísticas en tiempo real</h3>
+          <p>Detecta verbos en infinitivo, coherencia entre objetivos y preguntas, y el formato de tus hipótesis mientras escribes.</p>
+          <span class="big">✓</span>
+        </div>
+        <div class="cap reveal" style="--d:1">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M6 3v12M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 9a9 9 0 0 1-9 9"/></svg></div>
+          <h3>Lógica condicional</h3>
+          <p>El flujo se bifurca según el enfoque elegido —cuantitativo, cualitativo o mixto— activando u omitiendo módulos.</p>
+          <span class="big">⑂</span>
+        </div>
+        <div class="cap reveal" style="--d:2">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg></div>
+          <h3>Omega de McDonald (ω)</h3>
+          <p>Evalúa la confiabilidad de tus instrumentos a partir de cargas factoriales, con interpretación automática y recomendaciones.</p>
+          <span class="big">ω</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WORKSPACE ================= -->
+  <section class="view" id="view-modulo">
+    <div class="workspace">
+      <aside class="sidebar" id="sidebar" aria-label="Módulos"></aside>
+      <div class="scrim" id="scrim"></div>
+      <div style="min-width:0">
+        <div class="mobile-bar">
+          <button class="btn btn-dark btn-sm" id="openSidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg> Módulos</button>
+          <span class="badge g" id="mobileMod"></span>
+        </div>
+        <article class="panel" id="panel"></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COHERENCIA ================= -->
+  <section class="view" id="view-coherencia">
+    <div class="wrap section" style="padding-top:40px">
+      <div class="section-head">
+        <div><span class="eyebrow">Validaciones cruzadas</span><h2>¿Tu protocolo es coherente de principio a fin?</h2></div>
+        <p>YUMM IA cruza las decisiones de distintos módulos para detectar contradicciones metodológicas.</p>
+      </div>
+      <div class="coh-grid" id="cohGrid"></div>
+    </div>
+  </section>
+
+  <!-- ================= ACERCA ================= -->
+  <section class="view" id="view-acerca">
+    <div class="wrap section" style="padding-top:40px">
+      <div class="about-card reveal">
+        <img src="assets/logo-yumm.png" alt="YUMM IA · Student Research">
+        <div>
+          <span class="eyebrow">Acerca del programa</span>
+          <h2 style="font-size:28px;font-weight:800;line-height:1.2;margin:8px 0 12px">YUMM IA · Asistente de Investigación Metodológica</h2>
+          <p style="color:var(--muted)">El sistema opera como andamiaje cognitivo a través de 29 módulos secuenciales, desde la delimitación del tema hasta la simulación de la defensa de tesis. Funciona íntegramente en tu navegador: HTML, CSS y JavaScript, sin servidor ni dependencias. Tus datos se guardan en tu equipo (localStorage) y puedes exportarlos a Word y JSON.</p>
+          <dl>
+            <dt>Autores</dt><dd>Dr. Francisco José Medina Ocampo · Dra. Elda Verónica Martínez Mena</dd>
+            <dt>Institución</dt><dd>Universidad Tecnológica de Cancún</dd>
+            <dt>Versión</dt><dd>1.0 · Noviembre 2026</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="section-head reveal" style="margin-top:56px">
+        <div><span class="eyebrow">Arquitectura</span><h2>¿Cómo funciona?</h2></div>
+      </div>
+      <div class="cap-grid">
+        <div class="cap reveal"><h3>Bloqueo secuencial</h3><p>El Módulo N+1 permanece deshabilitado hasta que el Módulo N pase todas las validaciones. Tu avance se guarda automáticamente.</p><span class="big">1→2</span></div>
+        <div class="cap reveal" style="--d:1"><h3>Bifurcación por enfoque</h3><p>Cualitativo omite Hipótesis, Variables y Operacionalización y activa Categorías. Cuantitativo hace lo contrario; Mixto integra ambos.</p><span class="big">⑂</span></div>
+        <div class="cap reveal" style="--d:2"><h3>Exportación</h3><p>Al completar la estructura final se habilitan las exportaciones del protocolo a Word, PDF y los datos estructurados en JSON.</p><span class="big">.doc</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div><strong>YUMM IA</strong> · Asistente de Investigación Metodológica · Universidad Tecnológica de Cancún</div>
+    <div>Dr. Francisco José Medina Ocampo · Dra. Elda Verónica Martínez Mena · v1.0 · 2026</div>
+  </div>
+</footer>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script src="js/modules.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
